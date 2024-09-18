@@ -18,7 +18,7 @@ export function AccountSwitcher({ isCollapsed, accounts }) {
 				aria-label="Select account"
 			>
 				<SelectValue placeholder="Select an account">
-					{accounts.find((account) => account.email === selectedAccount)?.icon}
+					{/* {accounts.find((account) => account.email === selectedAccount)?.icon} */}
 					<span className={cn("ml-2", isCollapsed && "hidden")}>{accounts.find((account) => account.email === selectedAccount)?.label}</span>
 				</SelectValue>
 			</SelectTrigger>
@@ -26,7 +26,7 @@ export function AccountSwitcher({ isCollapsed, accounts }) {
 				{accounts.map((account) => (
 					<SelectItem key={account.email} value={account.email}>
 						<div className="flex items-center gap-3 [&_svg]:h-4 [&_svg]:w-4 [&_svg]:shrink-0 [&_svg]:text-foreground">
-							{account.icon}
+							{/* {account.icon} */}
 							{account.email}
 						</div>
 					</SelectItem>

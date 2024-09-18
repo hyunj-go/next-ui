@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AlertCircle, Archive, ArchiveX, File, Inbox, MessagesSquare, Search, Send, ShoppingCart, Trash2, Users2 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -13,11 +13,54 @@ import { AccountSwitcher } from "@/app/mail/components/account-switcher";
 import { MailDisplay } from "@/app/mail/components/mail-display";
 import { MailList } from "@/app/mail/components/mail-list";
 import { Nav } from "@/app/mail/components/nav";
-import { mails as initialMails } from "@/app/mail/data";
+// import { mails as initialMails } from "@/app/mail/data";
+import { supabase } from '@/lib/supabase';
 
-export function Mail({ accounts, mails = initialMails, defaultLayout = [20, 32, 48], defaultCollapsed = false, navCollapsedSize }) {
+export function Mail({ defaultLayout = [20, 32, 48], defaultCollapsed = false, navCollapsedSize }) {
 	const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
-	const [selectedMailId, setSelectedMailId] = useState(mails[0]?.id || null);
+	const [selectedMailId, setSelectedMailId] = useState(null);  /* 2024-08-17 */
+
+	
+	const [accounts, setAccounts] = useState([]);
+	const [mails, setMails] = useState([]);
+	const [loading, setLoading] = useState(true);
+	const [error, setError] = useState(null);
+
+	const fetchData = async () => {
+		// accounts 데이터 가져오기
+		const { data: accountsData, error: accountsError } = await supabase.from('accounts').select('*');
+		if (accountsError) {
+		  	console.error('Error fetching accounts data:', accountsError);
+		  	setError(accountsError);
+		} else {
+			console.log('Fetched accounts data:', accountsData);
+		   	setAccounts(accountsData); // accounts 데이터 저장
+		}
+	
+		// mails 데이터 가져오기
+		const { data: mailsData, error: mailsError } = await supabase.from('mails').select('*');
+		if (mailsError) {
+		  	console.error('Error fetching mails data:', mailsError);
+		  	setError(mailsError);
+		} else {
+			console.log('Fetched mails data:', mailsData);
+		  	setMails(mailsData); // mails 데이터 저장
+		}
+	
+		setLoading(false); // 로딩 완료
+	};
+	
+	useEffect(() => {
+	fetchData(); // 컴포넌트가 마운트될 때 fetchData 호출
+	}, []);
+
+	if (loading) {
+	return <div>Loading...</div>; // 로딩 중 표시
+	}
+
+	if (error) {
+	return <div>Error: {error.message}</div>; // 오류 메시지 표시
+	}
 
 	return (
 		<TooltipProvider delayDuration={0}>
@@ -127,7 +170,7 @@ export function Mail({ accounts, mails = initialMails, defaultLayout = [20, 32, 
 					/>
 				</ResizablePanel>
 				<ResizableHandle withHandle />
-				<ResizablePanel defaultSize={defaultLayout[1]} minSize={30}>
+				<ResizablePanel defaultSize={defaultLayout[1]} minSize={30} className={cn(selectedMailId ? "hidden" : "block", "md:block")}> {/* 2024-08-17 */}
 					<Tabs defaultValue="all">
 						<div className="flex items-center px-4 py-2">
 							<h1 className="text-xl font-bold">받은 메일함</h1>
@@ -151,18 +194,18 @@ export function Mail({ accounts, mails = initialMails, defaultLayout = [20, 32, 
 						</div>
 						<TabsContent value="all" className="m-0">
 							{/* 전체 메일 리스트를 필터링하여 MailList 컴포넌트로 전달 */}
-							<MailList items={mails} selectedMailId={selectedMailId} setSelectedMailId={setSelectedMailId} />
+							<MailList items={mails} selectedMailId={selectedMailId} setSelectedMailId={setSelectedMailId}/>
 						</TabsContent>
 						<TabsContent value="unread" className="m-0">
 							{/* 읽지 않은 메일 리스트를 필터링하여 MailList 컴포넌트로 전달 */}
-							<MailList items={mails.filter((item) => !item.read)} selectedMailId={selectedMailId} setSelectedMailId={setSelectedMailId} />
+							<MailList items={mails.filter((item) => !item.read)} selectedMailId={selectedMailId} setSelectedMailId={setSelectedMailId}/>
 						</TabsContent>
 					</Tabs>
 				</ResizablePanel>
 				<ResizableHandle withHandle />
-				<ResizablePanel defaultSize={defaultLayout[2]}>
+				<ResizablePanel defaultSize={ defaultLayout[2]} className={cn(selectedMailId ? "block" : "hidden", "md:block")}> {/* 2024-08-17 */}
 					{/* 선택된 메일을 찾아 MailDisplay 컴포넌트로 전달 */}
-					<MailDisplay mail={mails.find((item) => item.id === selectedMailId) || null} />
+					<MailDisplay mail={mails.find((item) => item.id === selectedMailId) || null} setSelectedMailId={setSelectedMailId}/> {/* 2024-08-17 */}
 				</ResizablePanel>
 			</ResizablePanelGroup>
 		</TooltipProvider>
